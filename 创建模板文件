@@ -1,0 +1,35 @@
+*模板必须在ROI内
+set_system ('border_shape_models', 'false')
+ window_length:=1400
+ window_width:=1400
+read_image (Image, '../02 (40).bmp')
+rgb1_to_gray (Image, GrayImage)
+*缩放图像的灰度值
+scale_image (GrayImage, ImageScaled, 3.75, -199)
+
+dev_open_window (0, 0, window_length, window_width, 'black', WindowHandle)
+*画出匹配的区域和引脚的区域
+* 分出模板匹配的区域
+dev_clear_window ()
+dev_display (ImageScaled)
+draw_rectangle2 (WindowHandle, Row2, Column2, Phi1, Length11, Length21)
+gen_rectangle2 (ROI_0, Row2, Column2, Phi1, Length11, Length21)
+draw_rectangle2 (WindowHandle, Row4, Column4, Phi4, Length14, Length24)
+gen_rectangle2 (TMP_Region, Row4, Column4, Phi4, Length14, Length24)
+union2 (ROI_0, TMP_Region, ROI_0)
+draw_rectangle2 (WindowHandle, Row5, Column5, Phi5, Length15, Length25)
+gen_rectangle2 (TMP_Region,Row5, Column5, Phi5, Length15, Length25)
+union2 (ROI_0, TMP_Region, ModelRegion)
+*计算模板的角度、中心坐标
+area_center (ModelRegion, Area, Row_Model, Column_Model)
+
+
+
+reduce_domain (ImageScaled, ModelRegion, TemplateImage)
+* Matching 02: create the shape model
+create_shape_model (TemplateImage, 8, rad(0), rad(360), rad(0.1426), ['none','no_pregeneration'], 'use_polarity', [47,86,4], 7, ModelId)
+* Matching 02: get the model contour for transforming it later into the image
+*获取这个模板的轮廓，用于后面的匹配
+get_shape_model_contours (ModelContours, ModelId, 1)
+write_shape_model(ModelId,'model'+'.shm')
+write_region (ModelRegion, 'model'+'.hobj')
