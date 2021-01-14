@@ -1,0 +1,37 @@
+set_system ('border_shape_models', 'false')
+ window_length:=1400
+ window_width:=1400
+ dev_open_window (0, 0, window_length, window_width, 'black', WindowHandle)
+read_image (Image, '../02.bmp')
+dev_display (Image)
+*创建字符识别区域
+*字符识别
+draw_rectangle2 (WindowHandle, Row_OCR, Column_OCR, Phi_OCR, Length1_OCR, Length2_OCR)
+ gen_rectangle2 (ROI_Model_OCR, Row_OCR, Column_OCR, Phi_OCR, Length1_OCR, Length2_OCR)
+reduce_domain (Image, ROI_Model_OCR, ImageReduced_OCR)
+*输出最小外接正矩形，某个区域的小图
+crop_domain(ImageReduced_OCR,Imagepart_OCR) 
+*转灰度、自动阈值分割，检测最小外接矩形的角度
+rgb1_to_gray (Imagepart_OCR, GrayImage_OCR)
+
+*二值化阈值分割
+binary_threshold (GrayImage_OCR, Regions_OCR, 'max_separability', 'light', UsedThreshold1)
+*开运算，先腐蚀后膨胀，减小像素
+opening_rectangle1 (Regions_OCR, RegionOpening_ocr, 2, 2)
+*利用矩形结构进行膨胀应用
+dilation_rectangle1 (RegionOpening_ocr, RegionDilation_OCR, 15, 15)
+*返回平行坐标最小外接矩形
+smallest_rectangle2 (RegionDilation_OCR , Row_OCR1, Column_OCR1, Phi_OCR1, Length1_OCR1, Length2_OCR1)
+area_center (Regions_OCR, Area_OCR, Row_OCR, Column_OCR)
+*计算模板膨胀前后的差值
+difference (RegionDilation_OCR, Regions_OCR, RegionDifference_model_ocr)
+area_center (RegionDifference_model_ocr, Area_ocr1, Row_ocr1, Column_ocr1)
+output_area:=Area_ocr1
+* output_Row_Model:=Row_Model
+* output_Column_Model:=Column_Model
+output_threshold:=UsedThreshold1
+output_Row_OCR1:=Row_OCR1
+output_Column_OCR1:=Column_OCR1
+output_Phi_OCR1:=Phi_OCR1
+write_region (ROI_Model_OCR, 'model_ocr'+'.hobj')
+write_region (RegionDilation_OCR, 'modelocr_dilition'+'.hobj')
